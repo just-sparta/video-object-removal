@@ -4,8 +4,8 @@ import os
 import numpy as np
 import subprocess as sp
 
-def createVideoClip(clip, folder, name, size=[256, 256]):
 
+def createVideoClip(clip, folder, name, size=[256, 256]):
     vf = clip.shape[0]
     command = ['ffmpeg',
                '-y',  # overwrite output file if it exists
@@ -42,22 +42,3 @@ if __name__ == '__main__':
     if not os.path.exists(video_path):
         os.makedirs(video_path)
     createVideoClip(final_clip, video_path, '%s.mp4' % (video_name), [shape[0], shape[1]])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

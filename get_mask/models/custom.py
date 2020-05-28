@@ -18,8 +18,8 @@ class ResDownS(nn.Module):
     def __init__(self, inplane, outplane):
         super(ResDownS, self).__init__()
         self.downsample = nn.Sequential(
-                nn.Conv2d(inplane, outplane, kernel_size=1, bias=False),
-                nn.BatchNorm2d(outplane))
+            nn.Conv2d(inplane, outplane, kernel_size=1, bias=False),
+            nn.BatchNorm2d(outplane))
 
     def forward(self, x):
         x = self.downsample(x)
@@ -73,7 +73,7 @@ class MaskCorr(Mask):
     def __init__(self, oSz=63):
         super(MaskCorr, self).__init__()
         self.oSz = oSz
-        self.mask = DepthCorr(256, 256, self.oSz**2)
+        self.mask = DepthCorr(256, 256, self.oSz ** 2)
 
     def forward(self, z, x):
         return self.mask(z, x)
@@ -88,22 +88,22 @@ class Refine(nn.Module):
         """
         super(Refine, self).__init__()
         self.v0 = nn.Sequential(nn.Conv2d(64, 16, 3, padding=1), nn.ReLU(),
-                           nn.Conv2d(16, 4, 3, padding=1), nn.ReLU())
+                                nn.Conv2d(16, 4, 3, padding=1), nn.ReLU())
 
         self.v1 = nn.Sequential(nn.Conv2d(256, 64, 3, padding=1), nn.ReLU(),
-                           nn.Conv2d(64, 16, 3, padding=1), nn.ReLU())
+                                nn.Conv2d(64, 16, 3, padding=1), nn.ReLU())
 
         self.v2 = nn.Sequential(nn.Conv2d(512, 128, 3, padding=1), nn.ReLU(),
-                           nn.Conv2d(128, 32, 3, padding=1), nn.ReLU())
+                                nn.Conv2d(128, 32, 3, padding=1), nn.ReLU())
 
         self.h2 = nn.Sequential(nn.Conv2d(32, 32, 3, padding=1), nn.ReLU(),
-                           nn.Conv2d(32, 32, 3, padding=1), nn.ReLU())
+                                nn.Conv2d(32, 32, 3, padding=1), nn.ReLU())
 
         self.h1 = nn.Sequential(nn.Conv2d(16, 16, 3, padding=1), nn.ReLU(),
-                           nn.Conv2d(16, 16, 3, padding=1), nn.ReLU())
+                                nn.Conv2d(16, 16, 3, padding=1), nn.ReLU())
 
         self.h0 = nn.Sequential(nn.Conv2d(4, 4, 3, padding=1), nn.ReLU(),
-                           nn.Conv2d(4, 4, 3, padding=1), nn.ReLU())
+                                nn.Conv2d(4, 4, 3, padding=1), nn.ReLU())
 
         self.deconv = nn.ConvTranspose2d(256, 32, 15, 15)
 
@@ -112,9 +112,10 @@ class Refine(nn.Module):
         self.post2 = nn.Conv2d(4, 1, 3, padding=1)
 
     def forward(self, f, corr_feature, pos=None):
-        p0 = torch.nn.functional.pad(f[0], [16,16,16,16])[:, :, 4*pos[0]:4*pos[0]+60, 4*pos[1]:4*pos[1]+60]
-        p1 = torch.nn.functional.pad(f[1], [8,8,8,8])[:, :, 2*pos[0]:2*pos[0]+30, 2*pos[1]:2*pos[1]+30]
-        p2 = torch.nn.functional.pad(f[2], [4,4,4,4])[:, :, pos[0]:pos[0]+15, pos[1]:pos[1]+15]
+        p0 = torch.nn.functional.pad(f[0], [16, 16, 16, 16])[:, :, 4 * pos[0]:4 * pos[0] + 60,
+             4 * pos[1]:4 * pos[1] + 60]
+        p1 = torch.nn.functional.pad(f[1], [8, 8, 8, 8])[:, :, 2 * pos[0]:2 * pos[0] + 30, 2 * pos[1]:2 * pos[1] + 30]
+        p2 = torch.nn.functional.pad(f[2], [4, 4, 4, 4])[:, :, pos[0]:pos[0] + 15, pos[1]:pos[1] + 15]
 
         p3 = corr_feature[:, :, pos[0], pos[1]].view(-1, 256, 1, 1)
 
@@ -122,7 +123,7 @@ class Refine(nn.Module):
         out = self.post0(F.upsample(self.h2(out) + self.v2(p2), size=(30, 30)))
         out = self.post1(F.upsample(self.h1(out) + self.v1(p1), size=(60, 60)))
         out = self.post2(F.upsample(self.h0(out) + self.v0(p0), size=(120, 120)))
-        out = out.view(-1, 120*120)
+        out = out.view(-1, 120 * 120)
         return out
 
 
@@ -155,4 +156,3 @@ class Custom(SiamMask):
     def track_refine(self, pos):
         pred_mask = self.refine_model(self.feature, self.corr_feature, pos=pos)
         return pred_mask
-

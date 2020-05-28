@@ -9,8 +9,6 @@ git clone https://github.com/zllrunning/video-object-removal.git
 cd video-object-removal
 cd get_mask
 bash make.sh
-cd ../inpainting
-bash install.sh
 cd ..
 ```
 
@@ -31,20 +29,6 @@ python demo.py --data data/bag.avi
 python demo.py --data data/Human6  --mask-dilation 24
 ```
 This parameter controls the size of the dilation kernel used for the mask. The role is to expand the range of the mask to avoid edge problems. Please see `inpainting/davis.py` for more details.
-
----
-**1. Just draw a bounding box like this:**
-
-![](results/get_mask.gif)
-
-**2. The objected will be removed and the inpainted video will be saved in `results/inpainting` folder.** (The Gif image loading takes some time, please wait a moment.)
-
-![](results/sgif.gif)
-
-### Examples
-![](results/skate.gif)
-![](results/surf.gif)
----
 
 ## Acknowledgement
 - This repo is based on [SiamMask](https://github.com/foolwood/SiamMask) and [Deep-Video-Inpainting](https://github.com/mcahny/Deep-Video-Inpainting). Many thanks to the excellent repo.

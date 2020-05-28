@@ -32,16 +32,15 @@ from get_mask.utils.pyvotkit.region import vot_overlap, vot_float2str
 thrs = np.arange(0.3, 0.5, 0.05)
 
 model_zoo = sorted(name for name in models.__dict__
-            if not name.startswith("__")
-            and callable(models.__dict__[name]))
-
+                   if not name.startswith("__")
+                   and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='Test SiamMask')
-parser.add_argument('--arch', dest='arch', default='', choices=model_zoo + ['Custom',],
+parser.add_argument('--arch', dest='arch', default='', choices=model_zoo + ['Custom', ],
                     help='architecture of pretrained model')
 parser.add_argument('--config', dest='config', required=True, help='hyper-parameter for SiamMask')
 parser.add_argument('--resume', default='', type=str, required=True,
-                    metavar='PATH',help='path to latest checkpoint (default: none)')
+                    metavar='PATH', help='path to latest checkpoint (default: none)')
 parser.add_argument('--mask', action='store_true', help='whether use mask output')
 parser.add_argument('--refine', action='store_true', help='whether use mask refine output')
 parser.add_argument('--dataset', dest='dataset', default='VOT2018', choices=dataset_zoo,
@@ -118,7 +117,7 @@ def generate_anchor(cfg, score_size):
     anchors = Anchors(cfg)
     anchor = anchors.anchors
     x1, y1, x2, y2 = anchor[:, 0], anchor[:, 1], anchor[:, 2], anchor[:, 3]
-    anchor = np.stack([(x1+x2)*0.5, (y1+y2)*0.5, x2-x1, y2-y1], 1)
+    anchor = np.stack([(x1 + x2) * 0.5, (y1 + y2) * 0.5, x2 - x1, y2 - y1], 1)
 
     total_stride = anchors.stride
     anchor_num = anchor.shape[0]
@@ -222,7 +221,7 @@ def siamese_track(state, im, mask_enable=False, refine_enable=False):
         return np.sqrt(sz2)
 
     # size penalty
-    target_sz_in_crop = target_sz*scale_x
+    target_sz_in_crop = target_sz * scale_x
     s_c = change(sz(delta[2, :], delta[3, :]) / (sz_wh(target_sz_in_crop)))  # scale penalty
     r_c = change((target_sz_in_crop[0] / target_sz_in_crop[1]) / (delta[2, :] / delta[3, :]))  # ratio penalty
 
@@ -369,7 +368,8 @@ def track_vot(model, video, hp=None, mask_enable=False, refine_enable=False):
                 if len(gt[f]) == 8:
                     cv2.polylines(im_show, [np.array(gt[f], np.int).reshape((-1, 1, 2))], True, (0, 255, 0), 3)
                 else:
-                    cv2.rectangle(im_show, (gt[f, 0], gt[f, 1]), (gt[f, 0] + gt[f, 2], gt[f, 1] + gt[f, 3]), (0, 255, 0), 3)
+                    cv2.rectangle(im_show, (gt[f, 0], gt[f, 1]), (gt[f, 0] + gt[f, 2], gt[f, 1] + gt[f, 3]),
+                                  (0, 255, 0), 3)
             if len(location) == 8:
                 if mask_enable:
                     mask = mask > state['p'].seg_thr
@@ -388,7 +388,7 @@ def track_vot(model, video, hp=None, mask_enable=False, refine_enable=False):
     toc /= cv2.getTickFrequency()
 
     # save result
-    name = args.arch.split('.')[0] + '_' + ('mask_' if mask_enable else '') + ('refine_' if refine_enable else '') +\
+    name = args.arch.split('.')[0] + '_' + ('mask_' if mask_enable else '') + ('refine_' if refine_enable else '') + \
            args.resume.split('/')[-1].split('.')[0]
 
     if 'VOT' in args.dataset:
@@ -399,14 +399,14 @@ def track_vot(model, video, hp=None, mask_enable=False, refine_enable=False):
         with open(result_path, "w") as fin:
             for x in regions:
                 fin.write("{:d}\n".format(x)) if isinstance(x, int) else \
-                        fin.write(','.join([vot_float2str("%.4f", i) for i in x]) + '\n')
+                    fin.write(','.join([vot_float2str("%.4f", i) for i in x]) + '\n')
     else:  # OTB
         video_path = join('test', args.dataset, name)
         if not isdir(video_path): makedirs(video_path)
         result_path = join(video_path, '{:s}.txt'.format(video['name']))
         with open(result_path, "w") as fin:
             for x in regions:
-                fin.write(','.join([str(i) for i in x])+'\n')
+                fin.write(','.join([str(i) for i in x]) + '\n')
 
     logger.info('({:d}) Video: {:12s} Time: {:02.1f}s Speed: {:3.1f}fps Lost: {:d}'.format(
         v_id, video['name'], toc, f / toc, lost_times))
@@ -427,7 +427,7 @@ def MultiBatchIouMeter(thrs, outputs, targets, start=None, end=None):
     num_object = len(object_ids)
     res = np.zeros((num_object, len(thrs)), dtype=np.float32)
 
-    output_max_id = np.argmax(outputs, axis=0).astype('uint8')+1
+    output_max_id = np.argmax(outputs, axis=0).astype('uint8') + 1
     outputs_max = np.max(outputs, axis=0)
     for k, thr in enumerate(thrs):
         output_thr = outputs_max > thr
@@ -440,7 +440,7 @@ def MultiBatchIouMeter(thrs, outputs, targets, start=None, end=None):
                 start_frame, end_frame = start[str(object_ids[j])] + 1, end[str(object_ids[j])] - 1
             iou = []
             for i in range(start_frame, end_frame):
-                pred = (output_thr[i] * output_max_id[i]) == (j+1)
+                pred = (output_thr[i] * output_max_id[i]) == (j + 1)
                 mask_sum = (pred == 1).astype(np.uint8) + (target_j[i] > 0).astype(np.uint8)
                 intxn = np.sum(mask_sum == 2)
                 union = np.sum(mask_sum > 0)
@@ -470,10 +470,10 @@ def track_vos(model, video, hp=None, mask_enable=False, refine_enable=False, mot
     else:
         object_ids = [o_id for o_id in np.unique(annos[0]) if o_id != 0]
         if len(object_ids) != len(annos_init):
-            annos_init = annos_init*len(object_ids)
+            annos_init = annos_init * len(object_ids)
     object_num = len(object_ids)
     toc = 0
-    pred_masks = np.zeros((object_num, len(image_files), annos[0].shape[0], annos[0].shape[1]))-1
+    pred_masks = np.zeros((object_num, len(image_files), annos[0].shape[0], annos[0].shape[1])) - 1
     for obj_id, o_id in enumerate(object_ids):
 
         if 'start_frame' in video:
@@ -488,7 +488,7 @@ def track_vos(model, video, hp=None, mask_enable=False, refine_enable=False, mot
             if f == start_frame:  # init
                 mask = annos_init[obj_id] == o_id
                 x, y, w, h = cv2.boundingRect((mask).astype(np.uint8))
-                cx, cy = x + w/2, y + h/2
+                cx, cy = x + w / 2, y + h / 2
                 target_pos = np.array([cx, cy])
                 target_sz = np.array([w, h])
                 state = siamese_init(im, target_pos, target_sz, model, hp)  # init tracker
@@ -506,8 +506,9 @@ def track_vos(model, video, hp=None, mask_enable=False, refine_enable=False, mot
                                             end=video['end_frame'] if 'end_frame' in video else None)
         for i in range(object_num):
             for j, thr in enumerate(thrs):
-                logger.info('Fusion Multi Object{:20s} IOU at {:.2f}: {:.4f}'.format(video['name'] + '_' + str(i + 1), thr,
-                                                                           multi_mean_iou[i, j]))
+                logger.info(
+                    'Fusion Multi Object{:20s} IOU at {:.2f}: {:.4f}'.format(video['name'] + '_' + str(i + 1), thr,
+                                                                             multi_mean_iou[i, j]))
     else:
         multi_mean_iou = []
 
@@ -518,7 +519,8 @@ def track_vos(model, video, hp=None, mask_enable=False, refine_enable=False, mot
         pred_mask_final = (np.argmax(pred_mask_final, axis=0).astype('uint8') + 1) * (
                 np.max(pred_mask_final, axis=0) > state['p'].seg_thr).astype('uint8')
         for i in range(pred_mask_final.shape[0]):
-            cv2.imwrite(join(video_path, image_files[i].split('/')[-1].split('.')[0] + '.png'), pred_mask_final[i].astype(np.uint8))
+            cv2.imwrite(join(video_path, image_files[i].split('/')[-1].split('.')[0] + '.png'),
+                        pred_mask_final[i].astype(np.uint8))
 
     if args.visualization:
         pred_mask_final = np.array(pred_masks)
@@ -528,14 +530,14 @@ def track_vos(model, video, hp=None, mask_enable=False, refine_enable=False, mot
         COLORS = np.vstack([[0, 0, 0], COLORS]).astype("uint8")
         mask = COLORS[pred_mask_final]
         for f, image_file in enumerate(image_files):
-            output = ((0.4 * cv2.imread(image_file)) + (0.6 * mask[f,:,:,:])).astype("uint8")
+            output = ((0.4 * cv2.imread(image_file)) + (0.6 * mask[f, :, :, :])).astype("uint8")
             cv2.imshow("mask", output)
             cv2.waitKey(1)
 
     logger.info('({:d}) Video: {:12s} Time: {:02.1f}s Speed: {:3.1f}fps'.format(
-        v_id, video['name'], toc, f*len(object_ids) / toc))
+        v_id, video['name'], toc, f * len(object_ids) / toc))
 
-    return multi_mean_iou, f*len(object_ids) / toc
+    return multi_mean_iou, f * len(object_ids) / toc
 
 
 def main():
@@ -579,11 +581,11 @@ def main():
     for v_id, video in enumerate(dataset.keys(), start=1):
         if vos_enable:
             iou_list, speed = track_vos(model, dataset[video], cfg['hp'] if 'hp' in cfg.keys() else None,
-                                 args.mask, args.refine, args.dataset in ['DAVIS2017', 'ytb_vos'])
+                                        args.mask, args.refine, args.dataset in ['DAVIS2017', 'ytb_vos'])
             iou_lists.append(iou_list)
         else:
             lost, speed = track_vot(model, dataset[video], cfg['hp'] if 'hp' in cfg.keys() else None,
-                             args.mask, args.refine)
+                                    args.mask, args.refine)
             total_lost += lost
         speed_list.append(speed)
 

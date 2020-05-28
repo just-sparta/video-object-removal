@@ -13,7 +13,6 @@ from get_mask.models.features import Features
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
 
-
 model_urls = {
     'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
     'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
@@ -70,11 +69,11 @@ class Bottleneck(Features):
         self.bn1 = nn.BatchNorm2d(planes)
         # padding = (2 - stride) + (dilation // 2 - 1)
         padding = 2 - stride
-        assert stride==1 or dilation==1, "stride and dilation must have one equals to zero at least"
+        assert stride == 1 or dilation == 1, "stride and dilation must have one equals to zero at least"
         if dilation > 1:
             padding = dilation
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                                padding=padding, bias=False, dilation=dilation)
+                               padding=padding, bias=False, dilation=dilation)
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * 4)
@@ -106,7 +105,6 @@ class Bottleneck(Features):
         out = self.relu(out)
 
         return out
-
 
 
 class Bottleneck_nop(nn.Module):
@@ -143,7 +141,7 @@ class Bottleneck_nop(nn.Module):
             residual = self.downsample(x)
 
         s = residual.size(3)
-        residual = residual[:, :, 1:s-1, 1:s-1]
+        residual = residual[:, :, 1:s - 1, 1:s - 1]
 
         out += residual
         out = self.relu(out)
@@ -156,27 +154,27 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, layer4=False, layer3=False):
         self.inplanes = 64
         super(ResNet, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=0, # 3
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=0,  # 3
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2) # 31x31, 15x15
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)  # 31x31, 15x15
 
         self.feature_size = 128 * block.expansion
 
         if layer3:
-            self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2) # 15x15, 7x7
+            self.layer3 = self._make_layer(block, 256, layers[2], stride=1, dilation=2)  # 15x15, 7x7
             self.feature_size = (256 + 128) * block.expansion
         else:
-            self.layer3 = lambda x:x # identity
+            self.layer3 = lambda x: x  # identity
 
         if layer4:
-            self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4) # 7x7, 3x3
+            self.layer4 = self._make_layer(block, 512, layers[3], stride=1, dilation=4)  # 7x7, 3x3
             self.feature_size = 512 * block.expansion
         else:
-            self.layer4 = lambda x:x  # identity
+            self.layer4 = lambda x: x  # identity
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -234,10 +232,10 @@ class ResNet(nn.Module):
 
 class ResAdjust(nn.Module):
     def __init__(self,
-            block=Bottleneck,
-            out_channels=256,
-            adjust_number=1,
-            fuse_layers=[2,3,4]):
+                 block=Bottleneck,
+                 out_channels=256,
+                 adjust_number=1,
+                 fuse_layers=[2, 3, 4]):
         super(ResAdjust, self).__init__()
         self.fuse_layers = set(fuse_layers)
 
@@ -250,7 +248,6 @@ class ResAdjust(nn.Module):
 
         self.feature_size = out_channels * len(self.fuse_layers)
 
-
     def _make_layer(self, block, plances, dilation, out, number=1):
 
         layers = []
@@ -260,9 +257,9 @@ class ResAdjust(nn.Module):
             layers.append(layer)
 
         downsample = nn.Sequential(
-                nn.Conv2d(plances * block.expansion, out, kernel_size=3, padding=1, bias=False),
-                nn.BatchNorm2d(out)
-                )
+            nn.Conv2d(plances * block.expansion, out, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out)
+        )
         layers.append(downsample)
 
         return nn.Sequential(*layers)
@@ -340,18 +337,18 @@ def resnet152(pretrained=False, **kwargs):
         model.load_state_dict(model_zoo.load_url(model_urls['resnet152']))
     return model
 
+
 if __name__ == '__main__':
     net = resnet50()
     print(net)
     net = net.cuda()
 
-    var = torch.FloatTensor(1,3,127,127).cuda()
+    var = torch.FloatTensor(1, 3, 127, 127).cuda()
     var = Variable(var)
 
     net(var)
     print('*************')
-    var = torch.FloatTensor(1,3,255,255).cuda()
+    var = torch.FloatTensor(1, 3, 255, 255).cuda()
     var = Variable(var)
 
     net(var)
-
